@@ -1,8 +1,12 @@
 import type { INestApplication } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import {
+  DocumentBuilder,
+  SwaggerModule,
+  type OpenAPIObject,
+} from '@nestjs/swagger';
 
-export function setupSwagger(app: INestApplication): void {
-  const config = new DocumentBuilder()
+export function buildSwaggerConfig() {
+  return new DocumentBuilder()
     .setTitle('Listix Worker API')
     .setDescription(
       'REST API for the Listix collaborative shopping list service',
@@ -26,8 +30,14 @@ export function setupSwagger(app: INestApplication): void {
     .addTag('health', 'Service health check')
     .addTag('public-web', 'Public web landing pages')
     .build();
+}
 
-  const document = SwaggerModule.createDocument(app, config);
+export function createSwaggerDocument(app: INestApplication): OpenAPIObject {
+  return SwaggerModule.createDocument(app, buildSwaggerConfig());
+}
+
+export function setupSwagger(app: INestApplication): void {
+  const document = createSwaggerDocument(app);
   SwaggerModule.setup('api/docs', app, document, {
     customSiteTitle: 'Listix Worker API Docs',
   });
