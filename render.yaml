@@ -7,8 +7,8 @@ services:
     runtime: node
     plan: free # Change to 'starter' for non-sleeping production deployment
     region: oregon
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm run build
-    startCommand: pnpm run db:deploy && pnpm run start:prod
+    buildCommand: npm install -g pnpm@12.6.0 && pnpm install --frozen-lockfile && pnpm run build
+    startCommand: npx prisma migrate deploy && node dist/main.js
     healthCheckPath: /health
     autoDeploy: true
     envVars:
