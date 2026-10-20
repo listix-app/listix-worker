@@ -9,6 +9,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import {
+  ApiOperation,
+  ApiParam,
+  ApiProduces,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { Env } from '../../../config/env.schema';
@@ -16,8 +24,10 @@ import { CryptoService } from '../../../shared/application/crypto.service';
 import { httpStatusFor } from '../../../shared/presentation/error-status.map';
 import { Public } from '../../auth/presentation/public.decorator';
 import { InvitesService } from '../../invites/application/invites.service';
+import { InviteValidationResponseDto } from '../../invites/presentation/invites-response.dto';
 import { renderInviteLandingPage } from './invite-landing.page';
 
+@ApiTags('public-web')
 @Controller()
 @UseGuards(ThrottlerGuard)
 export class InviteLandingController {
@@ -29,6 +39,31 @@ export class InviteLandingController {
 
   @Public()
   @Get('join/:credential')
+  @ApiOperation({
+    summary: 'Public invite landing page and deep-link metadata',
+  })
+  @ApiParam({
+    name: 'credential',
+    description:
+      'Invite code (8 alphanumeric chars) or 64-character hex link token',
+  })
+  @ApiQuery({
+    name: 'format',
+    required: false,
+    enum: ['html', 'json'],
+    description:
+      'Pass "json" to receive machine-readable invite validation metadata instead of HTML',
+  })
+  @ApiProduces('text/html', 'application/json')
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'HTML landing page or JSON metadata for the invite credential',
+    type: InviteValidationResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.TOO_MANY_REQUESTS,
+    description: 'Too many requests',
+  })
   async landing(
     @Param('credential') credential: string,
     @Query('format') format: string | undefined,
@@ -36,7 +71,9 @@ export class InviteLandingController {
     @Res({ passthrough: true }) response: Response,
   ) {
     const result = await this.invitesService.validate(credential);
-    response.status(result.valid ? HttpStatus.OK : httpStatusFor(result.errorCode ?? ''));
+    response.status(
+      result.valid ? HttpStatus.OK : httpStatusFor(result.errorCode ?? ''),
+    );
     response.setHeader('Cache-Control', 'no-store, max-age=0');
 
     if (format === 'json' || (accept ?? '').includes('application/json')) {
