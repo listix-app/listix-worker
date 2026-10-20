@@ -1,0 +1,51 @@
+# Render Blueprint Specification for Listix Worker
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: listix-worker
+    runtime: node
+    plan: free # Change to 'starter' for non-sleeping production deployment
+    region: oregon
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm run build
+    preDeployCommand: pnpm run db:deploy
+    startCommand: pnpm run start:prod
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 24.0.0
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: listix-db
+          property: connectionString
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_TTL_SECONDS
+        value: '900'
+      - key: REFRESH_TOKEN_TTL_DAYS
+        value: '90'
+      - key: CORS_ORIGINS
+        value: '*'
+      # Set this to your actual Render service URL (https://<service-name>.onrender.com)
+      - key: PUBLIC_BASE_URL
+        value: https://listix-worker.onrender.com
+      - key: INVITE_TTL_DAYS
+        value: '7'
+      - key: THROTTLE_TTL_MS
+        value: '60000'
+      - key: THROTTLE_LIMIT
+        value: '60'
+      - key: ALLOWED_APP_IDS
+        value: listix-app,listix-mobile,listix-web
+      - key: APP_SCHEME
+        value: listix
+
+databases:
+  - name: listix-db
+    databaseName: listix
+    user: postgres
+    plan: free # Change to 'starter' if persistent database without 30-day expiry is needed
+    region: oregon
