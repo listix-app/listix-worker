@@ -8,8 +8,7 @@ services:
     plan: free # Change to 'starter' for non-sleeping production deployment
     region: oregon
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm run build
-    preDeployCommand: pnpm run db:deploy
-    startCommand: pnpm run start:prod
+    startCommand: pnpm run db:deploy && pnpm run start:prod
     healthCheckPath: /health
     autoDeploy: true
     envVars:
@@ -46,6 +45,6 @@ services:
 databases:
   - name: listix-db
     databaseName: listix
-    user: postgres
+    user: listix_user
     plan: free # Change to 'starter' if persistent database without 30-day expiry is needed
     region: oregon
