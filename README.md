@@ -79,7 +79,9 @@ cp .env.example .env
 | `JWT_ACCESS_SECRET`      | Secret key for signing access tokens (>= 32 chars)     | —                                                                    |
 | `JWT_ACCESS_TTL_SECONDS` | Access token lifespan in seconds                       | `900` (15 min)                                                       |
 | `REFRESH_TOKEN_TTL_DAYS` | Refresh token lifespan in days                         | `90`                                                                 |
+| `CORS_ORIGINS`           | Allowed CORS origins (comma-separated, or `*`)         | `*`                                                                  |
 | `PUBLIC_BASE_URL`        | Public API base URL used for shareable invite links    | `http://localhost:3000`                                              |
+| `INVITE_TTL_DAYS`        | Invite lifespan in days                                | `7`                                                                  |
 | `APP_SCHEME`             | Custom URI deep-link scheme                            | `listix`                                                             |
 | `THROTTLE_TTL_MS`        | Rate limiting sliding window in ms                     | `60000` (1 min)                                                      |
 | `THROTTLE_LIMIT`         | Max requests per IP in rate window                     | `30`                                                                 |
@@ -108,6 +110,25 @@ pnpm run start:dev
 pnpm run start:prod
 ```
 
+Once running, browse the API docs at <http://localhost:3000/api/docs>.
+
+---
+
+## API Documentation (Swagger / OpenAPI)
+
+Interactive OpenAPI documentation is generated from the controllers and DTOs with `@nestjs/swagger` and served by the worker itself:
+
+| Resource     | URL                                   |
+| :----------- | :------------------------------------ |
+| Swagger UI   | `http://localhost:3000/api/docs`      |
+| OpenAPI JSON | `http://localhost:3000/api/docs-json` |
+
+- Endpoints are grouped by tag: `auth`, `lists`, `items`, `members`, `invites`, `health`, `public-web`.
+- Protected routes use the `access-token` bearer scheme. Call `POST /api/v1/auth/anonymous`, click **Authorize** in the UI, and paste the returned `accessToken`.
+- Errors share a common response shape (`ErrorResponseDto`).
+- Configuration lives in `src/shared/presentation/swagger.setup.ts`; new controllers must add `@ApiTags`, `@ApiOperation`, `@ApiResponse` and `@ApiBearerAuth('access-token')` (when authenticated), and DTOs must use `@ApiProperty`.
+- The Realtime Gateway (Socket.IO) is not part of OpenAPI; see the section below.
+
 ---
 
 ## API & Gateway Surface
@@ -127,6 +148,8 @@ pnpm run start:prod
 - `DELETE /api/v1/lists/:listId/invites/active`: Revoke active invite link and code.
 - `GET /api/v1/invites/:credential`: Validate invite code or token (rate-limited).
 - `POST /api/v1/invites/join`: Join a list using an invite credential.
+- `GET /api/v1/lists/:listId/members`: List the members of a list.
+- `DELETE /api/v1/lists/:listId/members/me`: Leave a list.
 - `PATCH /api/v1/lists/:listId/members/:userId`: Promote or demote member role.
 - `DELETE /api/v1/lists/:listId/members/:userId`: Remove collaborator from list.
 

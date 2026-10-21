@@ -1,6 +1,6 @@
 # Architecture Documentation — Listix Worker
 
-> Comprehensive architectural guide and system review for the `listix-worker` backend service, built with **NestJS**, **PostgreSQL (Prisma)**, and **WebSockets (Socket.IO)** in accordance with **Clean Architecture** principles and [AGENTS.md](file:///c:/Users/jmena/Documents/Personal-projects/Listix-project/listix-worker/AGENTS.md).
+> Comprehensive architectural guide and system review for the `listix-worker` backend service, built with **NestJS**, **PostgreSQL (Prisma)**, and **WebSockets (Socket.IO)** in accordance with **Clean Architecture** principles and [AGENTS.md](../AGENTS.md).
 
 ---
 
@@ -54,18 +54,19 @@ flowchart TB
 
 ### 2.1 Layer Constraints & Responsibilities
 
-| Layer | Directory | Responsibilities | Constraints |
-| :--- | :--- | :--- | :--- |
-| **Domain** | `src/modules/*/domain`<br/>`src/shared/domain` | Enterprise business entities, domain invariants, value objects, domain errors, and repository port definitions. | **Zero framework dependencies.** Plain TypeScript only. Never imports `@nestjs/*`, `@prisma/client`, or HTTP libraries. |
-| **Application** | `src/modules/*/application`<br/>`src/shared/application` | Application services orchestrating business workflows (`AuthService`, `ListsService`, `ItemsService`, `MembersService`, `InvitesService`) and outbound port contracts (`abstract class`). | Depends only on Domain and Ports. Framework-agnostic business workflows. |
-| **Infrastructure** | `src/modules/*/infrastructure`<br/>`src/shared/infrastructure` | Adapters for persistence (Prisma), cryptography (`node:crypto`), token signing (`@nestjs/jwt`), and in-memory event dispatching. | Implements Application and Domain ports. Maps Prisma database records to pure Domain entities. |
-| **Presentation** | `src/modules/*/presentation`<br/>`src/shared/presentation` | NestJS controllers, WebSocket gateways, DTOs with `class-validator`, guards (`JwtAuthGuard`, `ThrottlerGuard`), filters, and presenters. | Translates incoming HTTP/WS payloads to use case inputs; formats use case outputs into HTTP view models. |
+| Layer              | Directory                                                      | Responsibilities                                                                                                                                                                          | Constraints                                                                                                             |
+| :----------------- | :------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------- |
+| **Domain**         | `src/modules/*/domain`<br/>`src/shared/domain`                 | Enterprise business entities, domain invariants, value objects, domain errors, and repository port definitions.                                                                           | **Zero framework dependencies.** Plain TypeScript only. Never imports `@nestjs/*`, `@prisma/client`, or HTTP libraries. |
+| **Application**    | `src/modules/*/application`<br/>`src/shared/application`       | Application services orchestrating business workflows (`AuthService`, `ListsService`, `ItemsService`, `MembersService`, `InvitesService`) and outbound port contracts (`abstract class`). | Depends only on Domain and Ports. Framework-agnostic business workflows.                                                |
+| **Infrastructure** | `src/modules/*/infrastructure`<br/>`src/shared/infrastructure` | Adapters for persistence (Prisma), cryptography (`node:crypto`), token signing (`@nestjs/jwt`), and in-memory event dispatching.                                                          | Implements Application and Domain ports. Maps Prisma database records to pure Domain entities.                          |
+| **Presentation**   | `src/modules/*/presentation`<br/>`src/shared/presentation`     | NestJS controllers, WebSocket gateways, DTOs with `class-validator`, guards (`JwtAuthGuard`, `ThrottlerGuard`), filters, and presenters.                                                  | Translates incoming HTTP/WS payloads to use case inputs; formats use case outputs into HTTP view models.                |
 
 ### 2.2 Why Abstract Classes for Ports?
 
-In TypeScript, `interface` contracts are erased during compilation, preventing NestJS from using them as Dependency Injection (DI) tokens without string literal markers (`@Inject('PORT_TOKEN')`). 
+In TypeScript, `interface` contracts are erased during compilation, preventing NestJS from using them as Dependency Injection (DI) tokens without string literal markers (`@Inject('PORT_TOKEN')`).
 
 Instead, ports are declared as TypeScript `abstract class`es:
+
 ```typescript
 // Outbound Port (Domain or Application layer)
 export abstract class ListRepository {
@@ -76,6 +77,7 @@ export abstract class ListRepository {
 // Composition Root (NestJS Module)
 { provide: ListRepository, useClass: PrismaListRepository }
 ```
+
 This achieves pure architectural decoupling while retaining first-class NestJS constructor type-injection without decorator boilerplate.
 
 ---
@@ -84,15 +86,15 @@ This achieves pure architectural decoupling while retaining first-class NestJS c
 
 Applying the **Clean Architecture Quick Diagnostic** (as detailed in the `clean-architecture` skill):
 
-| # | Diagnostic Check | Status | Verification & Evidence |
-| :-: | :--- | :-: | :--- |
-| 1 | **Dependency Rule holds** | ✅ PASS | All imports point inward. Domain modules contain 0 imports of `@nestjs/*`, `@prisma/client`, or outside adapters. |
-| 2 | **Entities encapsulate critical business rules** | ✅ PASS | `ShoppingList.markDeleted()`, `ListItem.applyChanges()`, `MembershipPolicy.assertCanChangeRole()`, `ListInvite.assertUsableAt()`. |
-| 3 | **Use cases orchestrate single operations** | ✅ PASS | Each use case is a dedicated class with a single `execute()` method (`JoinList`, `SyncList`, `CreateInvite`, etc.). |
-| 4 | **Request/Response boundaries** | ✅ PASS | DTOs validate incoming data; Use cases receive command objects and return domain entities or result models; Presenters convert them to HTTP responses. |
-| 5 | **Repositories defined inward, implemented outward** | ✅ PASS | Domain defines `abstract class ListRepository`; Infrastructure implements `PrismaListRepository`. |
-| 6 | **Database and frameworks are details** | ✅ PASS | Prisma is strictly confined to `infrastructure/` and `prisma.service.ts`. Swapping Prisma for another ORM would not touch domain or application logic. |
-| 7 | **Delivery mechanism independent** | ✅ PASS | Use cases can be driven identically by HTTP controllers, WebSocket handlers, or CLI commands. |
+|  #  | Diagnostic Check                                       | Status  | Verification & Evidence                                                                                                                                           |
+| :-: | :----------------------------------------------------- | :-----: | :---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|  1  | **Dependency Rule holds**                              | ✅ PASS | All imports point inward. Domain modules contain 0 imports of `@nestjs/*`, `@prisma/client`, or outside adapters.                                                 |
+|  2  | **Entities encapsulate critical business rules**       | ✅ PASS | `ShoppingList.markDeleted()`, `ListItem.applyChanges()`, `MembershipPolicy.assertCanChangeRole()`, `ListInvite.assertUsableAt()`.                                 |
+|  3  | **Application services orchestrate single operations** | ✅ PASS | Application services group cohesive operations per aggregate (`ListsService.sync()`, `InvitesService.join()`, etc.).                                              |
+|  4  | **Request/Response boundaries**                        | ✅ PASS | DTOs validate incoming data; Application services receive command objects and return domain entities or result models; Presenters convert them to HTTP responses. |
+|  5  | **Repositories defined inward, implemented outward**   | ✅ PASS | Domain defines `abstract class ListRepository`; Infrastructure implements `PrismaListRepository`.                                                                 |
+|  6  | **Database and frameworks are details**                | ✅ PASS | Prisma is strictly confined to `infrastructure/` and `prisma.service.ts`. Swapping Prisma for another ORM would not touch domain or application logic.            |
+|  7  | **Delivery mechanism independent**                     | ✅ PASS | Application services can be driven identically by HTTP controllers, WebSocket handlers, or CLI commands.                                                          |
 
 **Score: 10 / 10** (Full Clean Architecture compliance).
 
@@ -135,6 +137,7 @@ sequenceDiagram
 When multiple concurrent operations target the same list (such as two users accepting the 5th invitation slot simultaneously, or concurrent item modifications), standard row locking can cause deadlocks or race conditions.
 
 Listix uses PostgreSQL transaction-scoped advisory locks:
+
 - Call: `SELECT pg_advisory_xact_lock(hashtextextended($1, 0))` keyed on `listId`.
 - **Serialization per List**: All writes to the same list are strictly serialized.
 - **Independence across Lists**: Operations on distinct lists run with full database concurrency without blocking each other.
@@ -187,7 +190,7 @@ src/
 │   ├── domain/                # Clock, Time utilities, DomainError base
 │   ├── application/           # CryptoService, TransactionManager ports
 │   ├── infrastructure/        # NodeCryptoService, SystemClock, PrismaService
-│   └── presentation/          # DomainErrorFilter, ErrorStatusMap
+│   └── presentation/          # DomainErrorFilter, ErrorStatusMap, swagger.setup.ts, ErrorResponseDto
 └── modules/
     ├── auth/                  # Anonymous identity & session management
     │   ├── domain/            # User, RefreshToken, Auth errors, Repositories
@@ -216,22 +219,40 @@ src/
 
 ## 6. Application Services Catalog & Conventions
 
-In adherence to [AGENTS.md](file:///c:/Users/jmena/Documents/Personal-projects/Listix-project/listix-worker/AGENTS.md), business workflows are organized into cohesive **Application Services** per aggregate or domain area:
+In adherence to [AGENTS.md](../AGENTS.md), business workflows are organized into cohesive **Application Services** per aggregate or domain area:
 
-| Service | File | Operations Orchestrated |
-| :--- | :--- | :--- |
-| **`AuthService`** | `auth.service.ts` | `signInAnonymously()`, `refreshSession()`, `getCurrentUser()` |
-| **`ListsService`** | `lists.service.ts` | `findMine()`, `sync()`, `getSnapshot()`, `delete()` |
-| **`ItemsService`** | `items.service.ts` | `upsert()`, `delete()` |
-| **`MembersService`** | `members.service.ts` | `changeRole()`, `remove()` |
-| **`InvitesService`** | `invites.service.ts` | `create()`, `revoke()`, `validate()`, `join()` |
+| Service              | File                 | Operations Orchestrated                                       |
+| :------------------- | :------------------- | :------------------------------------------------------------ |
+| **`AuthService`**    | `auth.service.ts`    | `signInAnonymously()`, `refreshSession()`, `getCurrentUser()` |
+| **`ListsService`**   | `lists.service.ts`   | `findMine()`, `sync()`, `getSnapshot()`, `delete()`           |
+| **`ItemsService`**   | `items.service.ts`   | `upsert()`, `delete()`                                        |
+| **`MembersService`** | `members.service.ts` | `changeRole()`, `remove()`                                    |
+| **`InvitesService`** | `invites.service.ts` | `create()`, `revoke()`, `validate()`, `join()`                |
 
 ---
 
-## 7. Compliance with AGENTS.md Guardrails
+## 7. API Documentation (Swagger / OpenAPI)
+
+The REST surface is self-documented through `@nestjs/swagger`, bootstrapped by `setupSwagger()` in `src/shared/presentation/swagger.setup.ts` and invoked from `configureApp()` (`src/app.setup.ts`).
+
+| Aspect              | Details                                                                                           |
+| :------------------ | :------------------------------------------------------------------------------------------------ |
+| **Swagger UI**      | `/api/docs`                                                                                       |
+| **OpenAPI JSON**    | `/api/docs-json`                                                                                  |
+| **Security scheme** | `access-token` (HTTP bearer, JWT) from `/api/v1/auth/anonymous` or `/api/v1/auth/refresh`         |
+| **Tags**            | `auth`, `lists`, `items`, `members`, `invites`, `health`, `public-web`                            |
+| **Layer**           | Presentation only: decorators on controllers and DTOs; domain and application stay framework-free |
+| **CSP**             | Helmet allows inline scripts/styles and `validator.swagger.io` images so the UI renders           |
+| **Test**            | `test/unit/swagger-spec.spec.ts` validates title, version, security scheme and tags               |
+
+The Socket.IO gateway (`/realtime`) is outside OpenAPI and is documented in the README.
+
+---
+
+## 8. Compliance with AGENTS.md Guardrails
 
 1. **No Automatic Staging or Commits**: All edits and new documentation remain unstaged in the working directory for manual inspection.
-2. **Platform & Store Agnostic**: 
+2. **Platform & Store Agnostic**:
    - No Android package names or iOS bundle identifiers are required by the core API.
    - Deep links use generic scheme formatting (`${APP_SCHEME}://join/${credential}`) with HTML copy-code fallbacks on `/join/:credential`.
 3. **Decorator Metadata & Isolated Modules (`isolatedModules: true`)**:
