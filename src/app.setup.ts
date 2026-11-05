@@ -6,6 +6,8 @@ import { Env } from './config/env.schema';
 import { setupSwagger } from './shared/presentation/swagger.setup';
 
 export const ROOT_ROUTES = [
+  { path: '', method: RequestMethod.GET },
+  { path: '/', method: RequestMethod.GET },
   { path: 'join/:credential', method: RequestMethod.GET },
   { path: 'health', method: RequestMethod.GET },
 ];
