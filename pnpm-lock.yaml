@@ -218,8 +218,8 @@ importers:
         specifier: ^12.5.0
         version: 12.5.0(@nestjs/common@12.1.2(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/platform-express@12.1.2)(@nestjs/websockets@12.1.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/event-emitter':
-        specifier: ^12.0.1
-        version: 12.0.1(@nestjs/common@12.1.2(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.5.0)
+        specifier: ^12.0.3
+        version: 12.0.3(@nestjs/common@12.1.2(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.5.0)
       '@nestjs/jwt':
         specifier: ^12.0.4
         version: 12.0.4(@nestjs/common@12.1.2(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))
@@ -1353,8 +1353,8 @@ packages:
       '@nestjs/websockets':
         optional: true
 
-  '@nestjs/event-emitter@12.0.1':
-    resolution: {integrity: sha512-7MbpgNcxUcDlqcYY/qgZm1H7MfK3uGcRsd8lEjj9ZYvI9qTl6kdkkykpxZ6YjBRH3wlZK5dFLAei8h5qpsHzOw==}
+  '@nestjs/event-emitter@12.0.3':
+    resolution: {integrity: sha512-HqooB51fhExAxGIHgncA0GyoNCXANmr+LEL/rsnQBL/9CxVDNmXGdoHpnrz8FnhMbq10TbgYfEBVANEPEFVb0A==}
     engines: {node: '>=20.19.0'}
     peerDependencies:
       '@nestjs/common': ^11.0.0 || ^12.0.0
@@ -5415,7 +5415,7 @@ snapshots:
 
   '@emnapi/runtime@1.11.3':
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.9.1
     optional: true
 
   '@emnapi/wasi-threads@1.2.1':
@@ -6055,7 +6055,7 @@ snapshots:
       '@nestjs/platform-express': 12.1.2(@nestjs/common@12.1.2(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.5.0)(supports-color@8.1.1)
       '@nestjs/websockets': 12.1.2(@nestjs/common@12.1.2(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.5.0)(@nestjs/platform-socket.io@12.1.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)
 
-  '@nestjs/event-emitter@12.0.1(@nestjs/common@12.1.2(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.5.0)':
+  '@nestjs/event-emitter@12.0.3(@nestjs/common@12.1.2(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.5.0)':
     dependencies:
       '@nestjs/common': 12.1.2(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1)
       '@nestjs/core': 12.5.0(@nestjs/common@12.1.2(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/platform-express@12.1.2)(@nestjs/websockets@12.1.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)
